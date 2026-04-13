@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Существа | Epsilon</title>
+    <link rel="icon" href="/epsilon-logo.png" type="image/png">
+
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-D8GCKSB3YW"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-D8GCKSB3YW');
+    </script>
+
+    <style>
+    @font-face {
+        font-family: 'Minecraft Rus';
+        src: url('/MinecraftRus.ttf') format('truetype');
+        font-weight: normal;
+        font-style: normal;
+        font-display: swap;
+    }
+
+    :root {
+        --primary-red: #ff0000;
+        --dark-red: #aa0000;
+        --black: #000000;
+        --deep-black: #0a0a0a;
+    }
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        background-color: var(--deep-black);
+        color: white;
+        font-family: 'Minecraft Rus', 'Courier New', monospace;
+        padding: 1.5rem;
+        line-height: 1.6;
+    }
+
+    header {
+        text-align: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--dark-red);
+    }
+
+    h1 {
+        color: var(--primary-red);
+        font-size: 2.2rem;
+        text-shadow: 0 0 8px rgba(255, 0, 0, 0.5);
+        letter-spacing: 1px;
+    }
+
+    .back-link {
+        display: inline-block;
+        margin-top: 1rem;
+        color: var(--primary-red);
+        text-decoration: none;
+        font-weight: bold;
+        font-size: 1rem;
+    }
+
+    .back-link:hover {
+        text-decoration: underline;
+    }
+
+    .creatures-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1.8rem;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .creature {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        background: rgba(20, 20, 20, 0.6);
+        padding: 1.2rem;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 0, 0, 0.2);
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .creature:hover {
+        transform: translateY(-4px);
+        border-color: var(--primary-red);
+        box-shadow: 0 6px 15px rgba(255, 0, 0, 0.3);
+    }
+
+    .avatar {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid var(--primary-red);
+        box-shadow: 0 0 10px rgba(255, 0, 0, 0.4);
+        transition: transform 0.3s ease;
+    }
+
+    .creature:hover .avatar {
+        transform: scale(1.08);
+    }
+
+    .name {
+        margin-top: 1rem;
+        font-size: 1.1rem;
+        font-weight: bold;
+        color: white;
+        word-break: break-word;
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.92);
+        z-index: 1000;
+        justify-content: center;
+        align-items: center;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .modal.active {
+        display: flex;
+        opacity: 1;
+    }
+
+    .modal-content {
+        background: var(--deep-black);
+        border: 2px solid var(--primary-red);
+        border-radius: 16px;
+        width: 95%;
+        max-width: 600px;
+        max-height: 90vh;
+        overflow: hidden;
+        position: relative;
+        box-shadow: 0 0 30px rgba(255, 0, 0, 0.5);
+        display: flex;
+        flex-direction: column;
+    }
+
+    .modal-scrollable {
+        padding: 1.8rem;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch; 
+        flex: 1;
+    }
+
+    .modal-scrollable::-webkit-scrollbar {
+        width: 6px;
+    }
+    .modal-scrollable::-webkit-scrollbar-track {
+        background: rgba(20, 20, 20, 0.2);
+        border-radius: 3px;
+    }
+    .modal-scrollable::-webkit-scrollbar-thumb {
+        background: var(--primary-red);
+        border-radius: 3px;
+    }
+
+    .close-btn {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        color: var(--primary-red);
+        font-size: 1.8rem;
+        cursor: pointer;
+        background: none;
+        border: none;
+        font-weight: bold;
+        z-index: 10;
+    }
+
+    .modal-avatar {
+        width: 110px;
+        height: 110px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid var(--primary-red);
+        margin: 0 auto 1.2rem;
+        display: block;
+    }
+
+    .modal-title {
+        font-size: 1.6rem;
+        color: var(--primary-red);
+        text-align: center;
+        margin-bottom: 1rem;
+    }
+
+    .modal-desc {
+        color: #cccccc;
+        line-height: 1.6;
+        font-size: 1rem;
+        text-align: left;
+        word-wrap: break-word;
+        white-space: pre-line;
+        margin-bottom: 1.2rem;
+    }
+
+    @media (max-width: 768px) {
+        body {
+            padding: 1rem;
+        }
+        h1 {
+            font-size: 1.8rem;
+        }
+        .creatures-grid {
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+        .avatar, .modal-avatar {
+            width: 90px;
+            height: 90px;
+        }
+        .modal-title {
+            font-size: 1.4rem;
+        }
+        .modal-desc {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .creature {
+            padding: 1rem;
+        }
+        .name {
+            font-size: 1rem;
+        }
+        .modal-content {
+            width: 98%;
+            max-height: 85vh;
+        }
+        .modal-scrollable {
+            padding: 1.5rem;
+        }
+    }
+</style>
+</head>
+<body>
+    <header>
+        <h1>Существа</h1>
+        <a href="index" class="back-link">← Вернуться на главную</a>
+    </header>
+
+    <div class="creatures-grid" id="creatures-grid">
+        <div class="creature" 
+             data-name="Теневая Стражница" 
+             data-desc="Стражница границы между реальностью и цифровой пустотой. Появляется в моменты системного кризиса, чтобы предотвратить утечку данных в физический мир. Не враждебна, но безжалостна к нарушителям."
+             data-img="https://i.pravatar.cc/150?img=101">
+            <img src="https://i.pravatar.cc/150?img=101" alt="Теневая Стражница" class="avatar">
+            <div class="name">Теневая Стражница</div>
+        </div>
+
+        <div class="creature" 
+             data-name="Глаз Хаоса" 
+             data-desc="Абстрактное существо, представляющее собой сгусток цифрового шума. Способно вызывать галлюцинации у тех, кто смотрит на него слишком долго. Единственный способ избежать безумия — не пытаться понять его."
+             data-img="https://i.pravatar.cc/150?img=102">
+            <img src="https://i.pravatar.cc/150?img=102" alt="Глаз Хаоса" class="avatar">
+            <div class="name">Глаз Хаоса</div>
+        </div>
+
+        <div class="creature" 
+             data-name="Кодовый Гул" 
+             data-desc="Рождается из брошенного, но не удалённого кода. Бродит по серверам в поисках новых строк для поглощения. Не имеет разума, но обладает инстинктом самосохранения и роста."
+             data-img="https://i.pravatar.cc/150?img=103">
+            <img src="https://i.pravatar.cc/150?img=103" alt="Кодовый Гул" class="avatar">
+            <div class="name">Кодовый Гул</div>
+        </div>
+
+        <div class="creature" 
+             data-name="Имя Существа" 
+             data-desc="Описание существа. Может быть длинным, с абзацами или даже списками. Поддерживает HTML, если нужно."
+             data-img="https://i.pravatar.cc/150?img=104">
+            <img src="https://i.pravatar.cc/150?img=104" alt="Имя Существа" class="avatar">
+            <div class="name">Имя Существа</div>
+        </div>
+    </div>
+
+    <div class="modal" id="creatureModal">
+        <div class="modal-content">
+            <button class="close-btn" id="closeModal">&times;</button>
+            <div class="modal-scrollable">
+                <img id="modalAvatar" class="modal-avatar" src="" alt="">
+                <h2 class="modal-title" id="modalTitle">Имя</h2>
+                <p class="modal-desc" id="modalDesc">Описание</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.querySelectorAll('.creature').forEach(creature => {
+            creature.addEventListener('click', () => {
+                const name = creature.dataset.name;
+                const desc = creature.dataset.desc;
+                const img = creature.dataset.img;
+
+                document.getElementById('modalTitle').textContent = name;
+                document.getElementById('modalDesc').textContent = desc;
+                document.getElementById('modalAvatar').src = img;
+
+                document.getElementById('creatureModal').classList.add('active');
+                document.body.style.overflow = 'hidden';
+            });
+        });
+
+        document.getElementById('closeModal').addEventListener('click', () => {
+            document.getElementById('creatureModal').classList.remove('active');
+            document.body.style.overflow = '';
+        });
+
+        document.getElementById('creatureModal').addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) {
+                document.getElementById('creatureModal').classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && document.getElementById('creatureModal').classList.contains('active')) {
+                document.getElementById('creatureModal').classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        });
+    </script>
+
+    <script>
+    (function() {
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('selectstart', e => e.preventDefault());
+        document.addEventListener('keydown', e => {
+            if (
+                e.key === 'F12' ||
+                (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J')) ||
+                (e.ctrlKey && e.key === 'U')
+            ) {
+                e.preventDefault();
+                return false;
+            }
+        });
+        document.querySelectorAll('img').forEach(img => {
+            img.addEventListener('dragstart', e => e.preventDefault());
+        });
+        document.body.style.userSelect = 'none';
+    })();
+    </script>
+    
+    <style>
+.qr-box {
+    position: fixed;
+    bottom: 20px;
+    right: 30px;  /* Закрепляет справа */
+    left: auto;   /* Сбрасывает левую сторону */
+    cursor: pointer;
+    z-index: 9998;
+}
+.qr-box img {
+    width: 100px;
+    height: 100px;
+    border: 2px solid #aa0000;
+    border-radius: 8px;
+    transition: 0.3s;
+}
+.qr-box:hover img {
+    border-color: #ff0000;
+    box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+}
+.qr-box .tooltip {
+    position: absolute;
+    bottom: 110px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #0a0a0a;
+    color: #ff0000;
+    padding: 8px 12px;
+    border: 1px solid #aa0000;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: bold;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: 0.3s;
+}
+.qr-box:hover .tooltip {
+    opacity: 1;
+    visibility: visible;
+}
+@media (max-width: 480px) {
+    .qr-box .tooltip { display: none; }
+}
+</style>
+
+<div class="qr-box" onclick="window.open('https://t.me/palma_202', '_blank')">
+    <div class="tooltip">СКАНИРУЙ МЕНЯ</div>
+    <img src="http://qrcoder.ru/code/?https%3A%2F%2Ft.me%2Fpalma_202&6&0" alt="QR Code">
+</div>
+
+<style>
+    .tg-widget-container {
+        position: fixed;
+        bottom: 140px;
+        right: 30px;
+        z-index: 9997;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 10px;
+        font-family: 'minecraft', 'Courier New', monospace;
+    }
+
+    .tg-glass-card {
+        background: var(--glass-bg);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid var(--glass-border);
+        border-radius: 16px;
+        padding: 1rem;
+        width: 280px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 var(--glass-highlight);
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        opacity: 0;
+        transform: translateX(20px);
+        pointer-events: none;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .tg-glass-card::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; width: 4px; height: 100%;
+        background: linear-gradient(180deg, #0088cc, #005f8f);
+        border-radius: 16px 0 0 16px;
+    }
+
+    .tg-glass-card.active {
+        opacity: 1;
+        transform: translateX(0);
+        pointer-events: all;
+    }
+
+    .tg-glass-card:hover {
+        transform: translateY(-5px) !important;
+        box-shadow: 0 12px 40px rgba(0, 136, 204, 0.25), 0 0 0 1px rgba(0, 136, 204, 0.3);
+        border-color: rgba(0, 136, 204, 0.5);
+    }
+
+    .tg-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 0.8rem;
+    }
+
+    .tg-icon {
+        width: 32px;
+        height: 32px;
+        background: linear-gradient(135deg, #0088cc, #005f8f);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 0 10px rgba(0, 136, 204, 0.4);
+        flex-shrink: 0;
+    }
+
+    .tg-icon svg {
+        width: 18px;
+        height: 18px;
+        fill: white;
+    }
+
+    .tg-title-group h4 {
+        color: var(--text-primary);
+        font-size: 0.95rem;
+        margin: 0;
+        text-shadow: 0 0 5px rgba(255,255,255,0.3);
+    }
+
+    .tg-title-group span {
+        color: var(--text-dim);
+        font-size: 0.75rem;
+        display: block;
+        margin-top: 2px;
+    }
+
+    .tg-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 0.7rem;
+        color: #4cd964;
+        background: rgba(76, 217, 100, 0.1);
+        padding: 2px 6px;
+        border-radius: 4px;
+        margin-top: 4px;
+        border: 1px solid rgba(76, 217, 100, 0.2);
+    }
+
+    .tg-status-dot {
+        width: 6px;
+        height: 6px;
+        background: #4cd964;
+        border-radius: 50%;
+        animation: pulseGreen 2s infinite;
+    }
+
+    @keyframes pulseGreen {
+        0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(76, 217, 100, 0.4); }
+        50% { opacity: 0.8; box-shadow: 0 0 0 4px rgba(76, 217, 100, 0); }
+    }
+
+    .tg-btn {
+        display: block;
+        width: 100%;
+        padding: 0.6rem;
+        margin-top: 0.8rem;
+        background: linear-gradient(90deg, rgba(0, 136, 204, 0.2), rgba(0, 95, 143, 0.2));
+        border: 1px solid rgba(0, 136, 204, 0.3);
+        border-radius: 8px;
+        color: #4db8ff;
+        text-align: center;
+        text-decoration: none;
+        font-size: 0.85rem;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .tg-btn::before {
+        content: '';
+        position: absolute;
+        top: 0; left: -100%;
+        width: 100%; height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+        transition: left 0.5s ease;
+    }
+
+    .tg-btn:hover {
+        background: linear-gradient(90deg, rgba(0, 136, 204, 0.35), rgba(0, 95, 143, 0.35));
+        border-color: #0088cc;
+        color: white;
+        box-shadow: 0 0 15px rgba(0, 136, 204, 0.3);
+        text-shadow: 0 0 8px rgba(77, 184, 255, 0.6);
+    }
+
+    .tg-btn:hover::before {
+        left: 100%;
+    }
+
+    .tg-toggle {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #0088cc, #005f8f);
+        border: 2px solid rgba(255,255,255,0.1);
+        box-shadow: 0 0 20px rgba(0, 136, 204, 0.4);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        z-index: 9998;
+        position: relative;
+    }
+
+    .tg-toggle svg {
+        width: 24px;
+        height: 24px;
+        fill: white;
+        transition: transform 0.3s ease;
+    }
+
+    .tg-toggle:hover {
+        transform: scale(1.1) rotate(-5deg);
+        box-shadow: 0 0 30px rgba(0, 136, 204, 0.6);
+    }
+
+    .tg-toggle.open svg {
+        transform: rotate(45deg);
+    }
+
+    @media (max-width: 480px) {
+        .tg-widget-container {
+            bottom: 110px;
+            right: 15px;
+        }
+        .tg-glass-card {
+            width: 240px;
+            padding: 0.8rem;
+        }
+    }
+</style>
+
+<div class="tg-widget-container">
+    <div class="tg-glass-card" id="tgCard">
+        <div class="tg-header">
+            <div class="tg-icon">
+                <svg viewBox="0 0 24 24"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.6 0 12 0zm5.3 8.7l-2.1 8.4c-.2.8-.6 1-1.3.7L9.8 15l-4.3-.4c-.8-.1-.8-.7 0-.9l10.4-7.3c.6-.4 1.2-.1 1.4.4z"/></svg>
+            </div>
+            <div class="tg-title-group">
+                <h4>Поддержка сайта 24/7</h4>
+                <span>связь с волонтерами</span>
+                <div class="tg-status">
+                    <div class="tg-status-dot"></div>
+                    Онлайн
+                </div>
+            </div>
+        </div>
+        <p style="color: var(--text-secondary); font-size: 0.85rem; line-height: 1.4; margin-bottom: 0;">
+            Возникли вопросы по проекту? Напишите нам в Telegram для быстрого решения проблем.
+        </p>
+        <a href="https://t.me/epsilonlabmsbot" target="_blank" rel="noopener" class="tg-btn">
+            Написать в Telegram
+        </a>
+    </div>
+
+    <div class="tg-toggle" id="tgToggle" onclick="toggleTgWidget()">
+        <svg viewBox="0 0 24 24"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.6 0 12 0zm5.3 8.7l-2.1 8.4c-.2.8-.6 1-1.3.7L9.8 15l-4.3-.4c-.8-.1-.8-.7 0-.9l10.4-7.3c.6-.4 1.2-.1 1.4.4z"/></svg>
+    </div>
+</div>
+
+<script>
+    function toggleTgWidget() {
+        const card = document.getElementById('tgCard');
+        const toggle = document.getElementById('tgToggle');
+        
+        if (card.classList.contains('active')) {
+            card.classList.remove('active');
+            toggle.classList.remove('open');
+            setTimeout(() => {
+                if (!card.classList.contains('active')) card.style.display = 'none';
+            }, 400);
+        } else {
+            card.style.display = 'block';
+            setTimeout(() => {
+                card.classList.add('active');
+                toggle.classList.add('open');
+            }, 10);
+        }
+    }
+
+    document.addEventListener('click', (e) => {
+        const widget = document.querySelector('.tg-widget-container');
+        const card = document.getElementById('tgCard');
+        const toggle = document.getElementById('tgToggle');
+        
+        if (!widget.contains(e.target) && card.classList.contains('active')) {
+            toggleTgWidget();
+        }
+    });
+</script>
+
+</body>
+</html>

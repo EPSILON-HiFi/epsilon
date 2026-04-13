@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Персонажи | Epsilon</title>
+    <link rel="icon" href="/epsilon-logo.png" type="image/png">
+    
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-D8GCKSB3YW"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-D8GCKSB3YW');
+    </script>
+    
+    <style>
+        :root {
+            --primary-red: #ff0000;
+            --dark-red: #aa0000;
+            --black: #000000;
+            --deep-black: #0a0a0a;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: var(--deep-black);
+            color: white;
+            font-family: 'Courier New', monospace;
+            padding: 1.5rem;
+            line-height: 1.6;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--dark-red);
+        }
+
+        h1 {
+            color: var(--primary-red);
+            font-size: 2.2rem;
+            text-shadow: 0 0 8px rgba(255, 0, 0, 0.5);
+            letter-spacing: 1px;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 1rem;
+            color: var(--primary-red);
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1rem;
+        }
+        .back-link:hover { text-decoration: underline; }
+
+        .characters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.8rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .character {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            background: rgba(20, 20, 20, 0.6);
+            padding: 1.2rem;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .character:hover {
+            transform: translateY(-4px);
+            border-color: var(--primary-red);
+            box-shadow: 0 6px 15px rgba(255, 0, 0, 0.3);
+        }
+
+        .avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--primary-red);
+            box-shadow: 0 0 10px rgba(255, 0, 0, 0.4);
+            transition: transform 0.3s ease;
+        }
+        .character:hover .avatar { transform: scale(1.08); }
+
+        .name {
+            margin-top: 1rem;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: white;
+            word-break: break-word;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.92);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .modal.active { display: flex; opacity: 1; }
+
+        .modal-content {
+            background: var(--deep-black);
+            border: 2px solid var(--primary-red);
+            border-radius: 16px;
+            width: 95%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 0 30px rgba(255, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-scrollable {
+            padding: 1.8rem;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            flex: 1;
+        }
+        .modal-scrollable::-webkit-scrollbar { width: 6px; }
+        .modal-scrollable::-webkit-scrollbar-track {
+            background: rgba(20, 20, 20, 0.2);
+            border-radius: 3px;
+        }
+        .modal-scrollable::-webkit-scrollbar-thumb {
+            background: var(--primary-red);
+            border-radius: 3px;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 1rem; right: 1rem;
+            color: var(--primary-red);
+            font-size: 1.8rem;
+            cursor: pointer;
+            background: none; border: none;
+            font-weight: bold; z-index: 10;
+        }
+
+        .modal-avatar {
+            width: 110px; height: 110px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--primary-red);
+            margin: 0 auto 1.2rem;
+            display: block;
+        }
+
+        .modal-title {
+            font-size: 1.6rem;
+            color: var(--primary-red);
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .modal-desc {
+            color: #cccccc;
+            line-height: 1.6;
+            font-size: 1rem;
+            text-align: left;
+            word-wrap: break-word;
+            white-space: pre-line;
+            margin-bottom: 1.2rem;
+        }
+
+        @media (max-width: 768px) {
+            body { padding: 1rem; }
+            h1 { font-size: 1.8rem; }
+            .characters-grid { grid-template-columns: 1fr; gap: 1.5rem; }
+            .avatar, .modal-avatar { width: 90px; height: 90px; }
+            .modal-title { font-size: 1.4rem; }
+            .modal-desc { font-size: 0.95rem; line-height: 1.5; }
+        }
+        @media (max-width: 480px) {
+            .character { padding: 1rem; }
+            .name { font-size: 1rem; }
+            .modal-content { width: 98%; max-height: 85vh; }
+            .modal-scrollable { padding: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Персонажи</h1>
+        <a href="index" class="back-link">← Вернуться на главную</a>
+    </header>
+
+    <div class="characters-grid" id="characters-grid">
+    </div>
+
+    <div class="modal" id="characterModal">
+        <div class="modal-content">
+            <button class="close-btn" id="closeModal">&times;</button>
+            <div class="modal-scrollable">
+                <img id="modalAvatar" class="modal-avatar" src="" alt="">
+                <h2 class="modal-title" id="modalTitle">Имя</h2>
+                <p class="modal-desc" id="modalDesc">Описание</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/pers.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const grid = document.getElementById('characters-grid');
+            
+            if (typeof charactersData !== 'undefined') {
+                charactersData.forEach((char, index) => {
+                    const card = document.createElement('div');
+                    card.className = 'character';
+                    card.dataset.index = index;
+                    card.innerHTML = `
+                        <img src="${char.img}" alt="${char.name}" class="avatar" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22 viewBox=%220 0 100 100%22%3E%3Crect fill=%22%23333%22 width=%22100%22 height=%22100%22/%3E%3Ctext fill=%22%23666%22 x=%2250%22 y=%2255%22 text-anchor=%22middle%22 font-size=%2212%22%3ENo Image%3C/text%3E%3C/svg%3E'">
+                        <div class="name">${char.name.split(' ')[0]}</div>
+                    `;
+                    grid.appendChild(card);
+                });
+
+                grid.addEventListener('click', (e) => {
+                    const card = e.target.closest('.character');
+                    if (!card) return;
+                    
+                    const index = card.dataset.index;
+                    const char = charactersData[index];
+                    
+                    document.getElementById('modalTitle').textContent = char.name;
+                    document.getElementById('modalDesc').textContent = char.desc;
+                    document.getElementById('modalAvatar').src = char.img;
+                    
+                    document.getElementById('characterModal').classList.add('active');
+                    document.body.style.overflow = 'hidden';
+                });
+            }
+
+            const closeModal = () => {
+                document.getElementById('characterModal').classList.remove('active');
+                document.body.style.overflow = '';
+            };
+
+            document.getElementById('closeModal').addEventListener('click', closeModal);
+            document.getElementById('characterModal').addEventListener('click', (e) => {
+                if (e.target === e.currentTarget) closeModal();
+            });
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && document.getElementById('characterModal').classList.contains('active')) {
+                    closeModal();
+                }
+            });
+        });
+    </script>
+
+    <script>
+    (function() {
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('selectstart', e => e.preventDefault());
+        document.addEventListener('keydown', e => {
+            if (
+                e.key === 'F12' ||
+                (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J')) ||
+                (e.ctrlKey && e.key === 'U')
+            ) {
+                e.preventDefault();
+                return false;
+            }
+        });
+        document.querySelectorAll('img').forEach(img => {
+            img.addEventListener('dragstart', e => e.preventDefault());
+        });
+        document.body.style.userSelect = 'none';
+    })();
+    </script>
+    
+    <style>
+.qr-box {
+    position: fixed;
+    bottom: 20px;
+    right: 30px;  /* Закрепляет справа */
+    left: auto;   /* Сбрасывает левую сторону */
+    cursor: pointer;
+    z-index: 9998;
+}
+.qr-box img {
+    width: 100px;
+    height: 100px;
+    border: 2px solid #aa0000;
+    border-radius: 8px;
+    transition: 0.3s;
+}
+.qr-box:hover img {
+    border-color: #ff0000;
+    box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+}
+.qr-box .tooltip {
+    position: absolute;
+    bottom: 110px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #0a0a0a;
+    color: #ff0000;
+    padding: 8px 12px;
+    border: 1px solid #aa0000;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: bold;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: 0.3s;
+}
+.qr-box:hover .tooltip {
+    opacity: 1;
+    visibility: visible;
+}
+@media (max-width: 480px) {
+    .qr-box .tooltip { display: none; }
+}
+</style>
+
+<div class="qr-box" onclick="window.open('https://t.me/palma_202', '_blank')">
+    <div class="tooltip">СКАНИРУЙ МЕНЯ</div>
+    <img src="http://qrcoder.ru/code/?https%3A%2F%2Ft.me%2Fpalma_202&6&0" alt="QR Code">
+</div>
+
+</body>
+</html>
