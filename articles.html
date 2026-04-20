@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Статьи | Epsilon</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="logo">
+        <img src="epsilon-logo.png" alt="Epsilon">
+        <h1>Epsilon</h1>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="card">
+      <h2>Статьи сообщества</h2>
+      <button class="btn" id="add-article-btn">Написать статью</button>
+      
+      <div id="articles-list" class="grid" style="margin-top: 20px;">
+        <!-- Динамически загружается -->
+      </div>
+    </div>
+
+    <!-- Модальное окно для статьи -->
+    <div id="article-modal" class="modal" style="display: none;">
+      <div class="card" style="max-width: 800px; margin: 50px auto;">
+        <h3 id="article-modal-title">Новая статья</h3>
+        <form id="article-form">
+          <div class="form-group">
+            <label>Заголовок</label>
+            <input type="text" id="article-title" required>
+          </div>
+          <div class="form-group">
+            <label>Текст статьи</label>
+            <textarea id="article-content" rows="8" required></textarea>
+          </div>
+          <div class="form-group">
+            <label>Ссылка на изображение</label>
+            <input type="url" id="article-image" placeholder="https://example.com/image.jpg">
+          </div>
+          <div class="form-group">
+            <label>Ссылка на видео</label>
+            <input type="url" id="article-video" placeholder="https://youtube.com/watch?v=...">
+          </div>
+          <button type="submit" class="btn">Опубликовать</button>
+          <button type="button" class="btn btn-outline" id="close-article-modal">Отмена</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="assets/js/firebase.js"></script>
+  <script>
+    let editingArticleId = null;
+
+    document.getElementById('add-article-btn').addEventListener('click', () => {
+      editingArticleId = null;
+      document.getElementById('article-modal-title').textContent = 'Новая статья';
+      document.getElementById('article-form').reset();
+      document.getElementById('article-modal').style.display = 'block';
+    });
+
+    document.getElementById('close-article-modal').addEventListener('click', () => {
+      document.getElementById('article-modal').style.display = 'none';
+    });
+
+    document.getElementById('article-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const user = firebase.auth().currentUser;
+      if (!user) return;
+
+      const article = {
+        title: document.getElementById('article-title').value,
+        content: document.getElementById('article-content').value,
+        image: document.getElementById('article-image').value,
+        video: document.getElementById('article-video').value,
+        userId: user.uid,
+        likes: 0,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+
+      if (editingArticleId) {
+        await firebase.firestore().collection('articles').doc(editingArticleId).update(article);
+      } else {
+        await firebase.firestore().collection('articles').add(article);
+      }
+
+      document.getElementById('article-modal').style.display = 'none';
+      loadArticles();
+    });
+
+    async function loadArticles() {
+      const snapshot = await firebase.firestore().collection('articles')
+        .orderBy('createdAt', 'desc')
+        .get();
+
+      const container = document.getElementById('articles-list');
+      container.innerHTML = '';
+
+      const users = {};
+      snapshot.docs.forEach(async doc => {
+        const data = doc.data();
+        if (!users[data.userId]) {
+          const userDoc = await firebase.firestore().collection('users').doc(data.userId).get();
+          users[data.userId] = userDoc.data().name || 'Аноним';
+        }
+      });
+
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const div = document.createElement('div');
+        div.className = 'card';
+        div.innerHTML = `
+          <h3>${data.title}</h3>
+          <p style="color: #aaa; margin: 10px 0;">Автор: ${users[data.userId]}</p>
+          ${data.image ? `<img src="${data.image}" class="media-preview">` : ''}
+          ${data.video ? `<iframe src="${data.video.replace('watch?v=', 'embed/')}" width="100%" height="200" frameborder="0"></iframe>` : ''}
+          <p style="margin: 15px 0;">${data.content}</p>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span>👍 ${data.likes}</span>
+            ${firebase.auth().currentUser?.uid === data.userId ? 
+              `<div>
+                <button class="btn btn-outline" onclick="editArticle('${doc.id}')">Редактировать</button>
+                <button class="btn" style="background: #ff3333;" onclick="deleteArticle('${doc.id}')">Удалить</button>
+              </div>` : ''}
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    window.editArticle = async (id) => {
+      editingArticleId = id;
+      const doc = await firebase.firestore().collection('articles').doc(id).get();
+      const data = doc.data();
+
+      document.getElementById('article-title').value = data.title;
+      document.getElementById('article-content').value = data.content;
+      document.getElementById('article-image').value = data.image || '';
+      document.getElementById('article-video').value = data.video || '';
+
+      document.getElementById('article-modal-title').textContent = 'Редактировать статью';
+      document.getElementById('article-modal').style.display = 'block';
+    };
+
+    window.deleteArticle = async (id) => {
+      if (confirm('Удалить статью?')) {
+        await firebase.firestore().collection('articles').doc(id).delete();
+        loadArticles();
+      }
+    };
+
+    firebase.auth().onAuthStateChanged(() => {
+      loadArticles();
+    });
+  </script>
+</body>
+</html>
