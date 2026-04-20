@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Мой профиль | Epsilon</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="logo">
+        <img src="epsilon-logo.png" alt="Epsilon">
+        <h1>Epsilon</h1>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="card">
+      <h2>Настройки профиля</h2>
+      
+      <div style="text-align: center; margin-bottom: 20px;">
+        <img id="profile-avatar" class="avatar" src="https://via.placeholder.com/100" alt="Аватар">
+        <input type="file" id="avatar-upload" accept="image/*" style="margin-top: 10px;">
+      </div>
+
+      <form id="profile-form">
+        <div class="form-group">
+          <label for="profile-name">Имя</label>
+          <input type="text" id="profile-name" required>
+        </div>
+        <div class="form-group">
+          <label for="profile-description">Описание</label>
+          <textarea id="profile-description" rows="3"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="profile-telegram">Telegram</label>
+          <input type="text" id="profile-telegram" placeholder="@username">
+        </div>
+        <div class="form-group">
+          <label for="profile-youtube">YouTube</label>
+          <input type="text" id="profile-youtube" placeholder="https://youtube.com/...">
+        </div>
+        <button type="submit" class="btn">Сохранить</button>
+      </form>
+
+      <h3 style="margin-top: 30px;">Изменить пароль</h3>
+      <form id="password-form">
+        <div class="form-group">
+          <label for="new-password">Новый пароль</label>
+          <input type="password" id="new-password" minlength="6" required>
+        </div>
+        <button type="submit" class="btn">Изменить пароль</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+  <script src="assets/js/firebase.js"></script>
+  <script>
+    // Загрузка данных профиля
+    firebase.auth().onAuthStateChanged(async (user) => {
+      if (user) {
+        const doc = await firebase.firestore().collection('users').doc(user.uid).get();
+        const data = doc.data();
+        
+        document.getElementById('profile-name').value = data.name || '';
+        document.getElementById('profile-description').value = data.description || '';
+        document.getElementById('profile-telegram').value = data.social?.telegram || '';
+        document.getElementById('profile-youtube').value = data.social?.youtube || '';
+        document.getElementById('profile-avatar').src = data.avatar || 'https://via.placeholder.com/100';
+      } else {
+        window.location.href = 'login.html';
+      }
+    });
+
+    // Сохранение профиля
+    document.getElementById('profile-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const user = firebase.auth().currentUser;
+      if (!user) return;
+
+      const name = document.getElementById('profile-name').value;
+      const description = document.getElementById('profile-description').value;
+      const telegram = document.getElementById('profile-telegram').value;
+      const youtube = document.getElementById('profile-youtube').value;
+
+      await firebase.firestore().collection('users').doc(user.uid).update({
+        name: name,
+        description: description,
+        social: { telegram, youtube }
+      });
+      alert('Профиль обновлен!');
+    });
+
+    // Загрузка аватара
+    document.getElementById('avatar-upload').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const user = firebase.auth().currentUser;
+      const storageRef = firebase.storage().ref(`avatars/${user.uid}`);
+      await storageRef.put(file);
+      const url = await storageRef.getDownloadURL();
+
+      await firebase.firestore().collection('users').doc(user.uid).update({ avatar: url });
+      document.getElementById('profile-avatar').src = url;
+    });
+
+    // Изменение пароля
+    document.getElementById('password-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const newPassword = document.getElementById('new-password').value;
+      try {
+        await firebase.auth().currentUser.updatePassword(newPassword);
+        alert('Пароль изменен!');
+      } catch (error) {
+        alert('Ошибка: ' + error.message);
+      }
+    });
+  </script>
+</body>
+</html>
