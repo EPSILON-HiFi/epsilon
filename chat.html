@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Чаты | Epsilon</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="logo">
+        <img src="epsilon-logo.png" alt="Epsilon">
+        <h1>Epsilon</h1>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="card">
+      <h2>Личные сообщения</h2>
+      
+      <div class="chat-container">
+        <div class="chat-users" id="chat-users">
+          <!-- Список пользователей -->
+        </div>
+        <div class="chat-messages" id="chat-messages">
+          <!-- Сообщения -->
+        </div>
+      </div>
+      
+      <div style="margin-top: 20px;">
+        <input type="text" id="message-input" placeholder="Введите сообщение..." style="width: 80%;">
+        <button class="btn" id="send-message">Отправить</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="assets/js/firebase.js"></script>
+  <script>
+    let currentChatId = null;
+    let currentUserId = null;
+
+    // Загрузка списка пользователей
+    async function loadUsers() {
+      const user = firebase.auth().currentUser;
+      if (!user) return;
+
+      currentUserId = user.uid;
+      const usersSnapshot = await firebase.firestore().collection('users').get();
+      const usersList = document.getElementById('chat-users');
+      usersList.innerHTML = '<h4>Пользователи</h4>';
+
+      usersSnapshot.forEach(doc => {
+        if (doc.id !== user.uid) {
+          const div = document.createElement('div');
+          div.className = 'card';
+          div.style.cursor = 'pointer';
+          div.innerHTML = `<strong>${doc.data().name}</strong>`;
+          div.onclick = () => startChat(doc.id);
+          usersList.appendChild(div);
+        }
+      });
+    }
+
+    // Начать чат
+    async function startChat(userId) {
+      // Создаем ID чата (всегда в одном порядке)
+      const chatId = [currentUserId, userId].sort().join('_');
+      currentChatId = chatId;
+      
+      // Загружаем сообщения
+      loadMessages(chatId);
+    }
+
+    // Загрузка сообщений
+    function loadMessages(chatId) {
+      const messagesRef = firebase.firestore().collection('chats').doc(chatId).collection('messages');
+      const messagesDiv = document.getElementById('chat-messages');
+      messagesDiv.innerHTML = '<p>Выберите пользователя для начала чата</p>';
+
+      messagesRef.orderBy('timestamp').onSnapshot(snapshot => {
+        messagesDiv.innerHTML = '';
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          const div = document.createElement('div');
+          div.className = 'message';
+          div.innerHTML = `
+            <strong>${data.senderName}:</strong> ${data.text}
+            <div style="font-size: 0.8em; color: #666; margin-top: 5px;">
+              ${data.timestamp.toDate().toLocaleString()}
+            </div>
+          `;
+          messagesDiv.appendChild(div);
+        });
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      });
+    }
+
+    // Отправка сообщения
+    document.getElementById('send-message').addEventListener('click', async () => {
+      const input = document.getElementById('message-input');
+      const text = input.value.trim();
+      if (!text || !currentChatId) return;
+
+      const user = firebase.auth().currentUser;
+      const userDoc = await firebase.firestore().collection('users').doc(user.uid).get();
+      
+      await firebase.firestore().collection('chats').doc(currentChatId).collection('messages').add({
+        text: text,
+        senderId: user.uid,
+        senderName: userDoc.data().name,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      input.value = '';
+    });
+
+    // Инициализация
+    firebase.auth().onAuthStateChanged((user) => {
+      if (user) {
+        loadUsers();
+      } else {
+        window.location.href = 'login.html';
+      }
+    });
+  </script>
+</body>
+</html>
