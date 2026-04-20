@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Персонажи | Epsilon</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="logo">
+        <img src="epsilon-logo.png" alt="Epsilon">
+        <h1>Epsilon</h1>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="card">
+      <h2>Мои персонажи</h2>
+      <button class="btn" id="add-character-btn">Добавить персонажа</button>
+      
+      <div id="characters-list" class="grid" style="margin-top: 20px;">
+        <!-- Динамически загружается -->
+      </div>
+    </div>
+
+    <!-- Модальное окно для добавления/редактирования -->
+    <div id="character-modal" class="modal" style="display: none;">
+      <div class="card" style="max-width: 600px; margin: 50px auto;">
+        <h3 id="modal-title">Добавить персонажа</h3>
+        <form id="character-form">
+          <div class="form-group">
+            <label>Имя персонажа</label>
+            <input type="text" id="char-name" required>
+          </div>
+          <div class="form-group">
+            <label>Возраст</label>
+            <input type="number" id="char-age" required>
+          </div>
+          <div class="form-group">
+            <label>Характеристика</label>
+            <textarea id="char-desc" rows="3" required></textarea>
+          </div>
+          <div class="form-group">
+            <label>Дата рождения</label>
+            <input type="date" id="char-birthday" required>
+          </div>
+          <div class="form-group">
+            <label>Ссылка на аватар</label>
+            <input type="url" id="char-avatar" placeholder="https://example.com/image.jpg">
+          </div>
+          <button type="submit" class="btn">Сохранить</button>
+          <button type="button" class="btn btn-outline" id="close-modal">Отмена</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="assets/js/firebase.js"></script>
+  <script>
+    let editingId = null;
+
+    // Показать модальное окно
+    document.getElementById('add-character-btn').addEventListener('click', () => {
+      editingId = null;
+      document.getElementById('modal-title').textContent = 'Добавить персонажа';
+      document.getElementById('character-form').reset();
+      document.getElementById('character-modal').style.display = 'block';
+    });
+
+    // Закрыть модальное окно
+    document.getElementById('close-modal').addEventListener('click', () => {
+      document.getElementById('character-modal').style.display = 'none';
+    });
+
+    // Сохранить персонажа
+    document.getElementById('character-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const user = firebase.auth().currentUser;
+      if (!user) return;
+
+      const character = {
+        name: document.getElementById('char-name').value,
+        age: document.getElementById('char-age').value,
+        description: document.getElementById('char-desc').value,
+        birthday: document.getElementById('char-birthday').value,
+        avatar: document.getElementById('char-avatar').value || 'https://via.placeholder.com/100',
+        userId: user.uid,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+
+      if (editingId) {
+        await firebase.firestore().collection('characters').doc(editingId).update(character);
+      } else {
+        await firebase.firestore().collection('characters').add(character);
+      }
+
+      document.getElementById('character-modal').style.display = 'none';
+      loadCharacters();
+    });
+
+    // Загрузить персонажей
+    async function loadCharacters() {
+      const user = firebase.auth().currentUser;
+      if (!user) return;
+
+      const snapshot = await firebase.firestore().collection('characters')
+        .where('userId', '==', user.uid)
+        .orderBy('createdAt', 'desc')
+        .get();
+
+      const container = document.getElementById('characters-list');
+      container.innerHTML = '';
+
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const div = document.createElement('div');
+        div.className = 'card';
+        div.innerHTML = `
+          <img src="${data.avatar}" class="avatar" style="width: 80px; height: 80px; margin: 0 auto;">
+          <h3>${data.name}</h3>
+          <p>Возраст: ${data.age} лет</p>
+          <p>ДР: ${data.birthday}</p>
+          <p>${data.description}</p>
+          <div style="margin-top: 10px;">
+            <button class="btn btn-outline" onclick="editCharacter('${doc.id}')">Редактировать</button>
+            <button class="btn" style="background: #ff3333;" onclick="deleteCharacter('${doc.id}')">Удалить</button>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    // Редактировать персонажа
+    window.editCharacter = async (id) => {
+      editingId = id;
+      const doc = await firebase.firestore().collection('characters').doc(id).get();
+      const data = doc.data();
+
+      document.getElementById('char-name').value = data.name;
+      document.getElementById('char-age').value = data.age;
+      document.getElementById('char-desc').value = data.description;
+      document.getElementById('char-birthday').value = data.birthday;
+      document.getElementById('char-avatar').value = data.avatar;
+
+      document.getElementById('modal-title').textContent = 'Редактировать персонажа';
+      document.getElementById('character-modal').style.display = 'block';
+    };
+
+    // Удалить персонажа
+    window.deleteCharacter = async (id) => {
+      if (confirm('Удалить персонажа?')) {
+        await firebase.firestore().collection('characters').doc(id).delete();
+        loadCharacters();
+      }
+    };
+
+    // Инициализация
+    firebase.auth().onAuthStateChanged((user) => {
+      if (user) {
+        loadCharacters();
+      } else {
+        window.location.href = 'login.html';
+      }
+    });
+  </script>
+</body>
+</html>
