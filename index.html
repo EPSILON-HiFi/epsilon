@@ -5,41 +5,104 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Epsilon | Official WebSite</title>
   <link rel="stylesheet" href="assets/css/style.css">
-  <link rel="icon" href="epsilon-logo.png" type="image/png">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
 </head>
 <body>
   <header>
     <div class="container">
-      <div class="logo">
-        <img src="epsilon-logo.png" alt="Epsilon">
+      <a href="index.html" class="logo">
+        <div class="logo-icon">ε</div>
         <h1>Epsilon</h1>
+      </a>
+      
+      <div class="menu-toggle" id="menu-toggle">
+        <span></span>
+        <span></span>
+        <span></span>
       </div>
+      
+      <nav>
+        <ul id="nav-menu">
+          <!-- Динамически заполняется через JS -->
+        </ul>
+      </nav>
     </div>
   </header>
-
-  <div class="container">
-    <nav>
-      <ul id="nav-menu">
-        <!-- Динамически заполняется через JS -->
-      </ul>
-    </nav>
-
-    <section class="card">
-      <h2>Добро пожаловать в фонд «Эпсилон»</h2>
+  
+  <main class="container">
+    <section class="hero">
+      <h1>Добро пожаловать в фонд «Эпсилон»</h1>
       <p>Закрытая международная организация, специализирующаяся на выявлении и нейтрализации аномальных угроз.</p>
-      
-      <div id="auth-buttons" style="margin-top: 20px;">
-        <button class="btn" onclick="location.href='login.html'">Войти</button>
-        <button class="btn btn-outline" onclick="location.href='register.html'">Регистрация</button>
+    </section>
+
+    <section class="stats">
+      <div class="stat-card">
+        <div class="stat-number">∞</div>
+        <div class="stat-label">Угроз нейтрализовано</div>
       </div>
-      
-      <div id="user-info" style="display: none; margin-top: 20px;">
-        <p>Привет, <span id="user-name"></span>!</p>
-        <button class="btn" onclick="location.href='profile.html'">Мой профиль</button>
-        <button class="btn btn-outline" onclick="logout()">Выйти</button>
+      <div class="stat-card">
+        <div class="stat-number">24/7</div>
+        <div class="stat-label">Мониторинг</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">Global</div>
+        <div class="stat-label">Покрытие</div>
       </div>
     </section>
-  </div>
+    
+    <section class="card">
+      <h2>Вход в систему</h2>
+      <p style="color: var(--gray); margin-bottom: 25px;">Авторизуйтесь для доступа к закрытым материалам фонда</p>
+      
+      <div id="auth-buttons" class="d-flex gap-2 flex-wrap">
+        <button class="btn" onclick="location.href='login.html'">
+          <span>🔐</span> Войти
+        </button>
+        <button class="btn btn-outline" onclick="location.href='register.html'">
+          <span>📝</span> Регистрация
+        </button>
+      </div>
+      
+      <div id="user-info" style="display: none; margin-top: 20px; text-align: center;">
+        <img id="user-avatar" class="avatar" src="https://via.placeholder.com/100" alt="Аватар" style="margin-bottom: 15px;">
+        <p style="font-size: 1.2rem; margin-bottom: 20px;">Привет, <span id="user-name" style="color: var(--primary); font-weight: bold;"></span>!</p>
+        <div class="d-flex gap-2 justify-between" style="max-width: 400px; margin: 0 auto;">
+          <button class="btn" onclick="location.href='profile.html'">
+            <span>👤</span> Мой профиль
+          </button>
+          <button class="btn btn-outline" onclick="logout()">
+            <span>🚪</span> Выйти
+          </button>
+        </div>
+      </div>
+    </section>
+    
+    <section class="card">
+      <h2>О фонде</h2>
+      <p style="margin-bottom: 15px;">Фонд «Эпсилон» — это секретная организация, созданная для защиты человечества от паранормальных угроз. Наши агенты работают по всему миру, обеспечивая безопасность и сохраняя нормальность повседневной жизни.</p>
+      <div class="grid" style="margin-top: 25px;">
+        <div class="card" style="padding: 20px;">
+          <h3 style="color: var(--primary);">🔍 Исследования</h3>
+          <p style="color: var(--gray);">Изучение аномальных явлений и артефактов</p>
+        </div>
+        <div class="card" style="padding: 20px;">
+          <h3 style="color: var(--primary);">🛡️ Защита</h3>
+          <p style="color: var(--gray);">Нейтрализация угроз и защита свидетелей</p>
+        </div>
+        <div class="card" style="padding: 20px;">
+          <h3 style="color: var(--primary);">📊 Анализ</h3>
+          <p style="color: var(--gray);">Сбор и обработка данных об аномалиях</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p>&copy; 2024 Фонд «Эпсилон». Все права защищены.</p>
+      <p style="font-size: 0.9rem; margin-top: 10px;">Секретность превыше всего</p>
+    </div>
+  </footer>
 
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
