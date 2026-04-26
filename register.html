@@ -5,43 +5,77 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Регистрация | Epsilon</title>
   <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
 </head>
 <body>
   <header>
     <div class="container">
-      <div class="logo">
-        <img src="epsilon-logo.png" alt="Epsilon">
+      <a href="index.html" class="logo">
+        <div class="logo-icon">ε</div>
         <h1>Epsilon</h1>
+      </a>
+      
+      <div class="menu-toggle" id="menu-toggle">
+        <span></span>
+        <span></span>
+        <span></span>
       </div>
+      
+      <nav>
+        <ul id="nav-menu">
+          <li><a href="index.html">Главная</a></li>
+          <li><a href="login.html">Вход</a></li>
+        </ul>
+      </nav>
     </div>
   </header>
 
-  <div class="container">
-    <div class="card">
-      <h2>Создать аккаунт</h2>
+  <main class="container">
+    <div class="card" style="max-width: 500px; margin: 50px auto;">
+      <h2 class="text-center">📝 Создание аккаунта</h2>
+      <p style="color: var(--gray); text-align: center; margin-bottom: 30px;">
+        Присоединяйтесь к фонду «Эпсилон»
+      </p>
+      
       <form id="register-form">
         <div class="form-group">
-          <label for="email">Email</label>
-          <input type="email" id="email" required>
+          <label for="name">👤 Имя агента</label>
+          <input type="text" id="name" placeholder="Агент Смит" required>
         </div>
+        
         <div class="form-group">
-          <label for="password">Пароль</label>
-          <input type="password" id="password" required minlength="6">
+          <label for="email">📧 Email</label>
+          <input type="email" id="email" placeholder="agent@epsilon.org" required>
         </div>
+        
         <div class="form-group">
-          <label for="name">Имя</label>
-          <input type="text" id="name" required>
+          <label for="password">🔑 Пароль</label>
+          <input type="password" id="password" placeholder="••••••••" required minlength="6">
         </div>
-        <button type="submit" class="btn">Зарегистрироваться</button>
-        <p style="margin-top: 15px;">
-          Уже есть аккаунт? <a href="login.html" style="color: var(--primary);">Войти</a>
+        
+        <button type="submit" class="btn btn-block mt-2">
+          <span>✨</span> Зарегистрироваться
+        </button>
+        
+        <p class="text-center mt-2">
+          Уже есть аккаунт? 
+          <a href="login.html" style="color: var(--primary); text-decoration: none; font-weight: bold;">
+            Войти
+          </a>
         </p>
       </form>
     </div>
-  </div>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p>&copy; 2024 Фонд «Эпсилон». Все права защищены.</p>
+    </div>
+  </footer>
 
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
   <script src="assets/js/firebase.js"></script>
   <script>
     document.getElementById('register-form').addEventListener('submit', async (e) => {
@@ -49,6 +83,10 @@
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
       const name = document.getElementById('name').value;
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+      
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="spinner" style="width:20px;height:20px;border-width:2px;"></span> Регистрация...';
 
       try {
         const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
@@ -57,12 +95,29 @@
           email: email,
           avatar: '',
           description: '',
-          social: {}
+          social: {},
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
-        alert('Аккаунт создан успешно!');
+        
+        // Показываем уведомление и перенаправляем
+        alert('Аккаунт успешно создан! Добро пожаловать в фонд.');
         window.location.href = 'profile.html';
       } catch (error) {
-        alert('Ошибка: ' + error.message);
+        alert('Ошибка регистрации: ' + error.message);
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<span>✨</span> Зарегистрироваться';
+      }
+    });
+
+    // Мобильное меню
+    document.addEventListener('DOMContentLoaded', () => {
+      const menuToggle = document.getElementById('menu-toggle');
+      const navMenu = document.getElementById('nav-menu');
+      
+      if (menuToggle && navMenu) {
+        menuToggle.addEventListener('click', () => {
+          navMenu.classList.toggle('active');
+        });
       }
     });
   </script>
